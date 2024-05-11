@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Gauge } from "./components/gauge.tsx";
 import { FiWifi,FiSettings, FiBattery, FiShield, FiDownload, FiCode } from 'react-icons/fi'; // Import du logo WiFi depuis react-icons
 import './App.css';
@@ -9,6 +9,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import SettingsPopUp from './actionsPopUp/settingsPopUp.js';
 import SecurityPopUp from './actionsPopUp/securityPopUp.js';
 import { motion } from "framer-motion";
+import { firestore, doc, getDoc } from "./configs/firebase.js"; // chemin vers votre fichier firebase.js
+import PasswordPopUp from './actionsPopUp/passwordPopUp.js';
 
 
 function App() {
@@ -35,6 +37,21 @@ function App() {
   const [sender, setSender] = useState();
   const [receiverCharacteristic, setReceiverCharacteristic] = useState();
   const [receiver, setReceiver] = useState();
+  const [loginData, setLoginData] = useState(null);
+
+  useEffect(() => {
+    const fetchLoginData = async () => {
+      const loginDocRef = doc(firestore, "login", "default"); // "login" est le nom de la collection et "default" est l'ID du document
+      const loginDocSnap = await getDoc(loginDocRef);
+      if (loginDocSnap.exists()) {
+        setLoginData(loginDocSnap.data());
+      } else {
+        console.error("No such document!");
+      }
+    };
+
+    fetchLoginData();
+  }, [isConnected]);
 
   function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -133,8 +150,14 @@ function App() {
       const decodedReceiverValue = new TextDecoder().decode(receiverValue);
       setReceiver(decodedReceiverValue);
       setReceiverCharacteristic(characteristicRadioReceiver);
+
+      if (loginData.enable === true){
+        toast.warn("Un mot de passe est obligatoire")
+        setPopUp("password");
+      }else{
+        setIsConnected(true);
+      }
       
-      setIsConnected(true);
     } catch (error) {
       if (error.message !== 'User cancelled the requestDevice() chooser.') {
         console.error(error);
@@ -190,6 +213,7 @@ const onDisconnected = () => {
   return (
     <div>
     <ToastContainer />
+    {popUp === "password" && PasswordPopUp(setPopUp, loginData, setIsConnected)}
     {!isConnected ? (
       <motion.div
       initial={{ opacity: 0 }}
@@ -211,7 +235,7 @@ const onDisconnected = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full w-full"
-          onClick={() => bluetooth()}
+          onClick={() => bluetooth()} //Si logindata.enable === true alors on affiche le mdp dans la console sinon on execute bluetooth()
         >
           Se connecter à la télécommande
         </motion.button>
@@ -253,7 +277,7 @@ const onDisconnected = () => {
     <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }} className="bg-white rounded-lg shadow-md p-6">
       {
          (popUp === "debug" && DebugPopup(setPopUp, debugMessages)) 
-      || (popUp === "security" && SecurityPopUp(setPopUp, senderCharacteristic, sender, setSender, receiverCharacteristic, receiver, setReceiver)) 
+      || (popUp === "security" && SecurityPopUp(setPopUp, senderCharacteristic, sender, setSender, receiverCharacteristic, receiver, setReceiver, loginData)) 
       || (popUp === "settings" && SettingsPopUp(setPopUp, ecoModeCharacteristic, ecoMode, setEcoMode, regulatorModeCharacteristic, regulatorMode, setRegulatorMode, limiterModeCharacteristic, limiterMode, setLimiterMode, speedViewerCharacteristic, speedViewer, setSpeedViewer))
       || (popUp === "battery" && BatteryPopup(setPopUp, batteryTrailer, batteryRemote, usageCharacteristic, delayCharacteristic, delayValue, setDelayValue, usageValue, setUsageValue))
       }

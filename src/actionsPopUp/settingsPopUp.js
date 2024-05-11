@@ -101,7 +101,6 @@ const SettingsPopUp = ( setPopUp, ecoModeCharacteristic, ecoMode, setEcoMode, re
             </Select>
           </div>
         </div>
-        {/* Bouton "Fermer" */}
         <div className='flex self-end mt-4'>
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
             className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md transition duration-300"
