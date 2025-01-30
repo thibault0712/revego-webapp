@@ -1,3 +1,12 @@
-Big project who has got the ambition to create a controler connected to the phone with a lot of settings and can communicate with a trailer to push a bicicle.
+## 🚀 Presentation
+This aims to create a controler connected to the phone with multiple settings. It communicate with a trailer to push a bicicle. PCB boards are homemade. The contrôler code is on an other repo
 
-good readme comming soon
+## ⚙️ Installation and execution 
+Revego wep app is based on reactjs. After downloading the the repository you need to execute this command to install all dependencies
+```
+npm install
+```
+To start the project, use 
+```
+npm run dev
+```
